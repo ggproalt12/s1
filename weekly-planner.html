@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>แพลนสัปดาห์</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f3f6fb;--card:#fff;--ink:#14213d;--muted:#5f6b85;--line:#d9e0ee;--accent:#2b59ff;--hi:#ffd23f;--ok:#1f9d6b;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1424;--card:#172038;--ink:#eef2ff;--muted:#9aa7c7;--line:#2a3658;--accent:#7b9bff;--ok:#43d19a}}
+:root[data-theme="dark"]{--bg:#0e1424;--card:#172038;--ink:#eef2ff;--muted:#9aa7c7;--line:#2a3658;--accent:#7b9bff;--ok:#43d19a}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Noto Sans Thai",system-ui,sans-serif;line-height:1.6}
+main{max-width:640px;margin:0 auto;padding:24px 16px 48px}
+h1{font-size:2rem;font-weight:800;margin:0 0 4px}
+h1 mark{background:var(--hi);color:#14213d;padding:0 .3em;border-radius:6px}
+.sub{color:var(--muted);margin:0 0 20px}
+.bar{height:12px;background:var(--line);border-radius:99px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--ok);transition:width .3s}
+.stat{margin:6px 0 20px;font-weight:600}
+form{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}
+input,select,button{font:inherit;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink)}
+input{flex:1 1 200px}
+button{cursor:pointer}
+.add{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:600}
+:focus-visible{outline:3px solid var(--hi);outline-offset:2px}
+section{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 16px;margin-bottom:12px}
+h2{font-size:1rem;margin:0 0 4px;color:var(--accent)}
+ul{list-style:none;margin:0;padding:0}
+li{display:flex;align-items:center;gap:10px;padding:6px 0;border-top:1px solid var(--line)}
+li:first-child{border-top:0}
+li span{flex:1}
+li.done span{text-decoration:line-through;color:var(--muted)}
+li input{flex:0 0 auto;width:20px;height:20px;accent-color:var(--ok)}
+.del{padding:2px 10px;color:var(--muted)}
+.empty{color:var(--muted);margin:4px 0;font-size:.9rem}
+</style>
+</head>
+<body>
+<main>
+<h1>แพลน<mark>สัปดาห์</mark></h1>
+<p class="sub">จดงานที่ต้องทำ แล้วติ๊กเมื่อเสร็จ</p>
+<div class="bar"><i id="fill"></i></div>
+<div class="stat" id="stat"></div>
+<form id="f">
+<input id="t" placeholder="เช่น ส่งรายงาน" aria-label="ชื่องาน" required>
+<select id="d" aria-label="วัน"></select>
+<button class="add" type="submit">เพิ่มงาน</button>
+</form>
+<div id="list"></div>
+</main>
+<script>
+var DAYS=["จันทร์","อังคาร","พุธ","พฤหัสบดี","ศุกร์","เสาร์","อาทิตย์"];
+var tasks=[];
+try{tasks=JSON.parse(localStorage.getItem("planner")||"[]")}catch(e){tasks=[]}
+function save(){try{localStorage.setItem("planner",JSON.stringify(tasks))}catch(e){}}
+var sel=document.getElementById("d");
+DAYS.forEach(function(n,i){var o=document.createElement("option");o.value=i;o.textContent="วัน"+n;sel.appendChild(o)});
+function render(){
+  var box=document.getElementById("list");box.innerHTML="";
+  DAYS.forEach(function(n,di){
+    var s=document.createElement("section");
+    var h=document.createElement("h2");h.textContent="วัน"+n;s.appendChild(h);
+    var items=tasks.filter(function(x){return x.day===di});
+    if(!items.length){var p=document.createElement("p");p.className="empty";p.textContent="ยังไม่มีงาน";s.appendChild(p)}
+    else{var ul=document.createElement("ul");
+      items.forEach(function(x){
+        var li=document.createElement("li");if(x.done)li.className="done";
+        var c=document.createElement("input");c.type="checkbox";c.checked=x.done;c.setAttribute("aria-label",x.text);
+        c.onchange=function(){x.done=c.checked;save();render()};
+        var sp=document.createElement("span");sp.textContent=x.text;
+        var b=document.createElement("button");b.className="del";b.textContent="ลบ";b.setAttribute("aria-label","ลบ "+x.text);
+        b.onclick=function(){tasks=tasks.filter(function(y){return y!==x});save();render()};
+        li.appendChild(c);li.appendChild(sp);li.appendChild(b);ul.appendChild(li)});
+      s.appendChild(ul)}
+    box.appendChild(s)});
+  var done=tasks.filter(function(x){return x.done}).length;
+  document.getElementById("fill").style.width=(tasks.length?done/tasks.length*100:0)+"%";
+  document.getElementById("stat").textContent=tasks.length?"เสร็จแล้ว "+done+" จาก "+tasks.length+" งาน":"เริ่มเพิ่มงานแรกได้เลย";
+}
+document.getElementById("f").onsubmit=function(e){
+  e.preventDefault();var t=document.getElementById("t");
+  var v=t.value.trim();if(!v)return;
+  tasks.push({text:v,day:+sel.value,done:false});t.value="";save();render();t.focus()};
+render();
+</script>
+</body>
+</html>
