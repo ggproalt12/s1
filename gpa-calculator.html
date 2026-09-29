@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>เครื่องคิดเกรดเฉลี่ย</title>
+<style>
+:root{--bg:#f4f7f2;--card:#fff;--ink:#1b2a22;--muted:#5d6f64;--line:#d8e2da;--accent:#0f7a55;--hi:#ffcf4a}
+@media (prefers-color-scheme:dark){:root{--bg:#0f1a15;--card:#182720;--ink:#eaf5ee;--muted:#9bb2a4;--line:#2b4136;--accent:#4fd1a0}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Noto Sans Thai","Sarabun",system-ui,sans-serif;line-height:1.6}
+main{max-width:600px;margin:0 auto;padding:24px 16px 48px}
+h1{font-size:1.9rem;margin:0 0 4px}
+.sub{color:var(--muted);margin:0 0 20px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px}
+.row{display:grid;grid-template-columns:1fr 84px 96px 40px;gap:8px;margin-bottom:8px}
+.head{color:var(--muted);font-size:.85rem}
+input,select,button{font:inherit;padding:9px 10px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);min-width:0}
+button{cursor:pointer}
+.add{margin-top:6px;background:transparent;border-style:dashed;color:var(--accent);width:100%}
+:focus-visible{outline:3px solid var(--hi);outline-offset:2px}
+.result{margin-top:16px;display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.gpa{font-size:3rem;font-weight:800;color:var(--accent);background:linear-gradient(transparent 62%,var(--hi) 62%);padding:0 .15em}
+.meta{color:var(--muted)}
+</style>
+</head>
+<body>
+<main>
+<h1>เครื่องคิดเกรดเฉลี่ย</h1>
+<p class="sub">กรอกวิชา หน่วยกิต และเกรด แล้วดูเกรดเฉลี่ยทันที</p>
+<div class="card">
+<div class="row head"><span>วิชา</span><span>หน่วยกิต</span><span>เกรด</span><span></span></div>
+<div id="rows"></div>
+<button class="add" id="add" type="button">เพิ่มวิชา</button>
+</div>
+<div class="result"><span class="gpa" id="gpa">0.00</span><span class="meta" id="meta">ยังไม่มีข้อมูล</span></div>
+</main>
+<script>
+var G=[["A",4],["B+",3.5],["B",3],["C+",2.5],["C",2],["D+",1.5],["D",1],["F",0]];
+var rows=document.getElementById("rows");
+function addRow(){
+  var r=document.createElement("div");r.className="row";
+  var n=document.createElement("input");n.placeholder="ชื่อวิชา";n.setAttribute("aria-label","ชื่อวิชา");
+  var c=document.createElement("input");c.type="number";c.min="0";c.step="0.5";c.value="3";c.setAttribute("aria-label","หน่วยกิต");
+  var g=document.createElement("select");g.setAttribute("aria-label","เกรด");
+  G.forEach(function(x){var o=document.createElement("option");o.value=x[1];o.textContent=x[0];g.appendChild(o)});
+  var d=document.createElement("button");d.type="button";d.textContent="✕";d.setAttribute("aria-label","ลบวิชา");
+  d.onclick=function(){r.remove();calc()};
+  c.oninput=calc;g.onchange=calc;
+  r.appendChild(n);r.appendChild(c);r.appendChild(g);r.appendChild(d);rows.appendChild(r);calc();
+}
+function calc(){
+  var pts=0,cr=0;
+  rows.querySelectorAll(".row").forEach(function(r){
+    var c=parseFloat(r.children[1].value)||0,g=parseFloat(r.children[2].value);
+    cr+=c;pts+=c*g});
+  document.getElementById("gpa").textContent=cr?(pts/cr).toFixed(2):"0.00";
+  document.getElementById("meta").textContent=cr?"รวม "+cr+" หน่วยกิต":"ยังไม่มีข้อมูล";
+}
+document.getElementById("add").onclick=addRow;
+addRow();addRow();addRow();
+</script>
+</body>
+</html>
